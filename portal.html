@@ -224,7 +224,7 @@
         .phone-input-group {
             display: flex;
             align-items: center;
-            flex: 1;
+            width: 100%;
         }
 
         .phone-prefix {
@@ -240,25 +240,29 @@
         }
 
         .phone-input-group .form-control {
-            border-radius: 0;
+            border-radius: 0 8px 8px 0;
             flex: 1;
+            min-width: 0;
         }
 
         .btn-buscar-dest {
+            width: 100%;
             background: linear-gradient(135deg, #1e40af, #3b82f6);
             color: white;
             border: none;
-            padding: 12px 16px;
-            font-size: 0.75rem;
+            padding: 14px 16px;
+            font-size: 0.85rem;
             font-weight: 600;
-            border-radius: 0 8px 8px 0;
+            border-radius: 8px;
             cursor: pointer;
-            white-space: nowrap;
             transition: all 0.3s;
+            margin-top: 12px;
         }
 
         .btn-buscar-dest:hover {
             background: linear-gradient(135deg, #1e3a8a, #2563eb);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4);
         }
 
         .destinatarios-filtros {
@@ -605,13 +609,13 @@
 
         .dashboard-search {
             display: flex;
-            gap: 10px;
+            flex-direction: column;
+            gap: 12px;
             margin-bottom: 20px;
         }
 
         .dashboard-search .phone-input-group {
-            flex: 1;
-            min-width: 0;
+            width: 100%;
         }
 
         .dashboard-search .phone-input-group .form-control {
@@ -619,18 +623,8 @@
         }
 
         .dashboard-search .btn-submit {
-            width: auto;
+            width: 100%;
             padding: 14px 30px;
-            white-space: nowrap;
-        }
-
-        .dashboard-search input {
-            flex: 1;
-        }
-
-        .dashboard-search button {
-            padding: 14px 25px;
-            white-space: nowrap;
         }
 
         /* Stats Cards */
@@ -1186,8 +1180,8 @@
                         <div class="phone-input-group">
                             <span class="phone-prefix">+55</span>
                             <input type="text" name="Telefone Responsavel" id="tel-resp-agend" class="form-control" placeholder="11999999999" required>
-                            <button type="button" class="btn-buscar-dest" onclick="carregarDestinatarios()">BUSCAR DESTINATÁRIOS</button>
                         </div>
+                        <button type="button" class="btn-buscar-dest" onclick="carregarDestinatarios()">BUSCAR DESTINATÁRIOS</button>
                     </div>
                     <div class="form-group" id="destinatarios-container" style="display: none;">
                         <label>Selecione os Destinatários <span class="required">*</span></label>
