@@ -2212,7 +2212,12 @@
                     `;
                 } else if (status === 'processando') {
                     acoesHtml = `
-                        <span style="color: #64748b; font-size: 0.8rem;">⏳ Aguarde...</span>
+                        <button class="btn-acao btn-reativar" onclick="executarAcao(${item.id}, 'reativar', this)">
+                            🔄 Forçar Reenvio
+                        </button>
+                        <button class="btn-acao btn-excluir" onclick="abrirModalExclusao(${item.id})">
+                            🗑️ Excluir
+                        </button>
                     `;
                 } else {
                     // Para qualquer outro status, mostrar pelo menos o botão excluir
