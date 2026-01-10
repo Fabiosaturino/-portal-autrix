@@ -1139,6 +1139,54 @@
                 width: 100%;
                 justify-content: center;
             }
+
+            /* Correção lista de destinatários no mobile */
+            .destinatario-item {
+                flex-wrap: wrap;
+                padding: 12px;
+                gap: 8px;
+            }
+
+            .destinatario-item input[type="checkbox"] {
+                order: 1;
+                margin-right: 8px;
+                flex-shrink: 0;
+                min-width: 18px;
+            }
+
+            .destinatario-info {
+                order: 2;
+                flex: 1;
+                min-width: 0;
+                overflow: hidden;
+            }
+
+            .destinatario-nome {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 0.9rem;
+            }
+
+            .destinatario-numero {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 0.75rem;
+            }
+
+            .destinatario-tipo {
+                order: 3;
+                font-size: 0.65rem;
+                padding: 2px 6px;
+            }
+
+            .btn-remover-dest {
+                order: 4;
+                padding: 8px 12px;
+                margin-left: 0;
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
