@@ -361,6 +361,23 @@
             color: #94a3b8;
         }
 
+        .btn-remover-dest {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+            transition: all 0.2s;
+        }
+
+        .btn-remover-dest:hover {
+            background: rgba(239, 68, 68, 0.4);
+            transform: scale(1.05);
+        }
+
         .form-row {
             display: flex;
             gap: 15px;
@@ -1879,15 +1896,51 @@
                 return;
             }
             list.innerHTML = destinatarios.map(dest => `
-                <label class="destinatario-item" data-tipo="${dest.tipo || 'contato'}" data-nome="${dest.nome.toLowerCase()}" onclick="toggleDestinatario(this)">
-                    <input type="checkbox" name="destinatarios[]" value="${dest.id}">
-                    <div class="destinatario-info">
+                <div class="destinatario-item" data-tipo="${dest.tipo || 'contato'}" data-nome="${dest.nome.toLowerCase()}">
+                    <input type="checkbox" name="destinatarios[]" value="${dest.id}" onclick="event.stopPropagation(); this.parentElement.classList.toggle('selected');">
+                    <div class="destinatario-info" onclick="toggleDestinatario(this.parentElement)">
                         <div class="destinatario-nome">${dest.nome}</div>
                         <div class="destinatario-numero">${dest.numero}</div>
                     </div>
                     <span class="destinatario-tipo">${dest.tipo || 'contato'}</span>
-                </label>
+                    <button type="button" class="btn-remover-dest" onclick="event.stopPropagation(); removerDestinatario(${dest.id}, '${dest.nome.replace(/'/g, "\\'")}')">🗑️</button>
+                </div>
             `).join('');
+        }
+
+        async function removerDestinatario(destId, destNome) {
+            if (!confirm(`Deseja remover o destinatário "${destNome}"?`)) {
+                return;
+            }
+            
+            const telefone = '55' + document.getElementById('tel-resp-agend').value.replace(/\D/g, '');
+            
+            try {
+                const response = await fetch('https://workflow.autrix.com.br/webhook/remover-destinatario', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        telefone: telefone,
+                        destinatario_id: destId
+                    })
+                });
+
+                const result = await response.json();
+
+                if (result.sucesso || response.ok) {
+                    showAlert('alert-agend', '✓ Destinatário removido com sucesso!', 'success');
+                    // Remover da lista local e re-renderizar
+                    todosDestinatarios = todosDestinatarios.filter(d => d.id !== destId);
+                    filtrarDestinatarios();
+                } else {
+                    throw new Error(result.mensagem || 'Erro ao remover');
+                }
+            } catch (error) {
+                console.error('Erro ao remover destinatário:', error);
+                showAlert('alert-agend', `✗ Erro: ${error.message}`, 'error');
+            }
         }
 
         function setFiltro(tipo, btn) {
