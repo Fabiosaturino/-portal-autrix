@@ -472,20 +472,36 @@
 
         .time-picker-dropdown {
             display: none;
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            margin-top: 5px;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 320px;
+            max-width: 90%;
             background: rgba(15, 23, 42, 0.98);
             border: 1px solid rgba(59, 130, 246, 0.3);
             border-radius: 12px;
             padding: 20px;
-            z-index: 100;
+            z-index: 1000;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
         }
 
         .time-picker-dropdown.open {
+            display: block;
+        }
+        
+        .time-picker-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+        
+        .time-picker-overlay.open {
             display: block;
         }
 
@@ -725,14 +741,49 @@
         .recorrencia-options {
             display: none;
             margin-top: 15px;
-            padding: 15px;
+            padding: 20px;
             background: rgba(59, 130, 246, 0.05);
-            border: 1px solid rgba(59, 130, 246, 0.2);
-            border-radius: 8px;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 12px;
         }
 
         .recorrencia-options.show {
             display: block;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .recorrencia-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        .recorrencia-icon {
+            font-size: 1.3rem;
+        }
+
+        .recorrencia-title {
+            color: #3b82f6;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .recorrencia-content {
+            padding: 5px 0;
         }
 
         .dias-semana-grid {
@@ -1206,7 +1257,8 @@
                         <label>URL da Imagem (opcional)</label>
                         <input type="url" name="URL da Imagem" class="form-control" placeholder="https://exemplo.com/imagem.jpg">
                     </div>
-                    <div class="form-row">
+                    <!-- Data e Horário (apenas para disparo único) -->
+                    <div id="data-hora-unico" class="form-row">
                         <div class="form-group">
                             <label>Data do Disparo <span class="required">*</span></label>
                             <input type="date" name="Data do Disparo" id="data-disparo" class="form-control" required>
@@ -1216,31 +1268,34 @@
                             <input type="hidden" name="Hora do Disparo" id="hora-disparo">
                             <div class="time-picker-container">
                                 <input type="text" id="time-picker-display" class="time-picker-input" placeholder="Clique para selecionar o horário" readonly onclick="toggleTimePicker()">
-                                <div id="time-picker-dropdown" class="time-picker-dropdown">
-                                    <div class="time-picker-header">
-                                        <span>Selecione o horário</span>
-                                        <button type="button" class="time-picker-close" onclick="closeTimePicker()">✕</button>
-                                    </div>
-                                    <div class="time-picker-columns">
-                                        <div class="time-column">
-                                            <div class="time-column-label">Hora</div>
-                                            <div class="time-scroll" id="hour-scroll"></div>
-                                        </div>
-                                        <div class="time-separator">:</div>
-                                        <div class="time-column">
-                                            <div class="time-column-label">Minuto</div>
-                                            <div class="time-scroll" id="minute-scroll"></div>
-                                        </div>
-                                    </div>
-                                    <button type="button" class="time-picker-confirm" onclick="confirmTime()">CONFIRMAR</button>
-                                </div>
                             </div>
                         </div>
                     </div>
                     
+                    <!-- Time Picker Overlay e Dropdown (compartilhado) -->
+                    <div id="time-picker-overlay" class="time-picker-overlay" onclick="closeTimePicker()"></div>
+                    <div id="time-picker-dropdown" class="time-picker-dropdown">
+                        <div class="time-picker-header">
+                            <span>Selecione o horário</span>
+                            <button type="button" class="time-picker-close" onclick="closeTimePicker()">✕</button>
+                        </div>
+                        <div class="time-picker-columns">
+                            <div class="time-column">
+                                <div class="time-column-label">Hora</div>
+                                <div class="time-scroll" id="hour-scroll"></div>
+                            </div>
+                            <div class="time-separator">:</div>
+                            <div class="time-column">
+                                <div class="time-column-label">Minuto</div>
+                                <div class="time-scroll" id="minute-scroll"></div>
+                            </div>
+                        </div>
+                        <button type="button" class="time-picker-confirm" onclick="confirmTime()">CONFIRMAR</button>
+                    </div>
+                    
                     <!-- Recorrência -->
                     <div class="form-group">
-                        <label>Repetir</label>
+                        <label>Recorrência</label>
                         <select name="Recorrencia" id="recorrencia-select" class="form-control" onchange="toggleRecorrenciaOptions()">
                             <option value="unico">Única vez</option>
                             <option value="diario">Diariamente</option>
@@ -1249,25 +1304,72 @@
                         </select>
                     </div>
 
+                    <!-- Opções de Diário -->
+                    <div id="opcoes-diario" class="recorrencia-options">
+                        <div class="recorrencia-header">
+                            <span class="recorrencia-icon">🔄</span>
+                            <span class="recorrencia-title">Configuração do Disparo Diário</span>
+                        </div>
+                        <div class="recorrencia-content">
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="color: #94a3b8; font-size: 0.9rem;">Horário do disparo <span class="required">*</span></label>
+                                <div class="time-picker-container">
+                                    <input type="text" id="time-picker-diario" class="time-picker-input" placeholder="Clique para selecionar" readonly onclick="toggleTimePickerRecorrencia('diario')">
+                                </div>
+                                <input type="hidden" id="hora-diario">
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Opções de Semanal -->
                     <div id="opcoes-semanal" class="recorrencia-options">
-                        <label style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 8px; display: block;">Dias da semana</label>
-                        <div class="dias-semana-grid">
-                            <div class="dia-semana-btn" data-dia="0" onclick="toggleDiaSemana(this)">Dom</div>
-                            <div class="dia-semana-btn" data-dia="1" onclick="toggleDiaSemana(this)">Seg</div>
-                            <div class="dia-semana-btn" data-dia="2" onclick="toggleDiaSemana(this)">Ter</div>
-                            <div class="dia-semana-btn" data-dia="3" onclick="toggleDiaSemana(this)">Qua</div>
-                            <div class="dia-semana-btn" data-dia="4" onclick="toggleDiaSemana(this)">Qui</div>
-                            <div class="dia-semana-btn" data-dia="5" onclick="toggleDiaSemana(this)">Sex</div>
-                            <div class="dia-semana-btn" data-dia="6" onclick="toggleDiaSemana(this)">Sáb</div>
+                        <div class="recorrencia-header">
+                            <span class="recorrencia-icon">📅</span>
+                            <span class="recorrencia-title">Configuração do Disparo Semanal</span>
                         </div>
-                        <input type="hidden" name="Dias Semana" id="dias-semana-input">
+                        <div class="recorrencia-content">
+                            <label style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 8px; display: block;">Dias da semana <span class="required">*</span></label>
+                            <div class="dias-semana-grid">
+                                <div class="dia-semana-btn" data-dia="0" onclick="toggleDiaSemana(this)">Dom</div>
+                                <div class="dia-semana-btn" data-dia="1" onclick="toggleDiaSemana(this)">Seg</div>
+                                <div class="dia-semana-btn" data-dia="2" onclick="toggleDiaSemana(this)">Ter</div>
+                                <div class="dia-semana-btn" data-dia="3" onclick="toggleDiaSemana(this)">Qua</div>
+                                <div class="dia-semana-btn" data-dia="4" onclick="toggleDiaSemana(this)">Qui</div>
+                                <div class="dia-semana-btn" data-dia="5" onclick="toggleDiaSemana(this)">Sex</div>
+                                <div class="dia-semana-btn" data-dia="6" onclick="toggleDiaSemana(this)">Sáb</div>
+                            </div>
+                            <input type="hidden" name="Dias Semana" id="dias-semana-input">
+                            
+                            <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
+                                <label style="color: #94a3b8; font-size: 0.9rem;">Horário do disparo <span class="required">*</span></label>
+                                <div class="time-picker-container">
+                                    <input type="text" id="time-picker-semanal" class="time-picker-input" placeholder="Clique para selecionar" readonly onclick="toggleTimePickerRecorrencia('semanal')">
+                                </div>
+                                <input type="hidden" id="hora-semanal">
+                            </div>
+                        </div>
                     </div>
 
                     <!-- Opções de Mensal -->
                     <div id="opcoes-mensal" class="recorrencia-options">
-                        <label style="color: #94a3b8; font-size: 0.9rem;">Dia do mês</label>
-                        <input type="number" name="Dia Mes" id="dia-mes-input" class="form-control dia-mes-input" min="1" max="31" placeholder="1-31">
+                        <div class="recorrencia-header">
+                            <span class="recorrencia-icon">📆</span>
+                            <span class="recorrencia-title">Configuração do Disparo Mensal</span>
+                        </div>
+                        <div class="recorrencia-content">
+                            <div class="form-group">
+                                <label style="color: #94a3b8; font-size: 0.9rem;">Dia do mês <span class="required">*</span></label>
+                                <input type="number" name="Dia Mes" id="dia-mes-input" class="form-control dia-mes-input" min="1" max="31" placeholder="1-31">
+                            </div>
+                            
+                            <div class="form-group" style="margin-bottom: 0;">
+                                <label style="color: #94a3b8; font-size: 0.9rem;">Horário do disparo <span class="required">*</span></label>
+                                <div class="time-picker-container">
+                                    <input type="text" id="time-picker-mensal" class="time-picker-input" placeholder="Clique para selecionar" readonly onclick="toggleTimePickerRecorrencia('mensal')">
+                                </div>
+                                <input type="hidden" id="hora-mensal">
+                            </div>
+                        </div>
                     </div>
 
                     <button type="submit" id="btn-agend" class="btn-submit">AGENDAR DISPARO</button>
@@ -1407,24 +1509,22 @@
                 option.onclick = () => selectMinute(m, option);
                 minuteScroll.appendChild(option);
             }
-
-            // Fechar dropdown ao clicar fora
-            document.addEventListener('click', (e) => {
-                const dropdown = document.getElementById('time-picker-dropdown');
-                const container = document.querySelector('.time-picker-container');
-                if (!container.contains(e.target)) {
-                    dropdown.classList.remove('open');
-                }
-            });
         }
 
+        // Variável para rastrear qual time picker de recorrência está ativo
+        let currentRecorrenciaTimePicker = null;
+
         function toggleTimePicker() {
+            currentRecorrenciaTimePicker = null; // Limpar para disparo único
             const dropdown = document.getElementById('time-picker-dropdown');
+            const overlay = document.getElementById('time-picker-overlay');
             dropdown.classList.toggle('open');
+            overlay.classList.toggle('open');
         }
 
         function closeTimePicker() {
             document.getElementById('time-picker-dropdown').classList.remove('open');
+            document.getElementById('time-picker-overlay').classList.remove('open');
         }
 
         function selectHour(hour, element) {
@@ -1450,8 +1550,17 @@
             }
             
             const timeStr = `${selectedHour.toString().padStart(2, '0')}:${selectedMinute.toString().padStart(2, '0')}`;
-            document.getElementById('hora-disparo').value = timeStr;
-            document.getElementById('time-picker-display').value = `⏰ ${timeStr}`;
+            
+            if (currentRecorrenciaTimePicker) {
+                // Para recorrência
+                document.getElementById(`time-picker-${currentRecorrenciaTimePicker}`).value = `⏰ ${timeStr}`;
+                document.getElementById(`hora-${currentRecorrenciaTimePicker}`).value = timeStr;
+                currentRecorrenciaTimePicker = null;
+            } else {
+                // Para disparo único
+                document.getElementById('hora-disparo').value = timeStr;
+                document.getElementById('time-picker-display').value = `⏰ ${timeStr}`;
+            }
             closeTimePicker();
         }
 
@@ -1468,17 +1577,43 @@
         // Funções de Recorrência
         function toggleRecorrenciaOptions() {
             const recorrencia = document.getElementById('recorrencia-select').value;
+            const dataHoraUnico = document.getElementById('data-hora-unico');
+            const opcoesDiario = document.getElementById('opcoes-diario');
             const opcoesSemanal = document.getElementById('opcoes-semanal');
             const opcoesMensal = document.getElementById('opcoes-mensal');
             
+            // Esconder todos os blocos
+            opcoesDiario.classList.remove('show');
             opcoesSemanal.classList.remove('show');
             opcoesMensal.classList.remove('show');
             
-            if (recorrencia === 'semanal') {
-                opcoesSemanal.classList.add('show');
-            } else if (recorrencia === 'mensal') {
-                opcoesMensal.classList.add('show');
+            // Controlar visibilidade de Data/Horário único vs recorrência
+            if (recorrencia === 'unico') {
+                dataHoraUnico.style.display = 'flex';
+                // Tornar campos obrigatórios
+                document.getElementById('data-disparo').required = true;
+            } else {
+                dataHoraUnico.style.display = 'none';
+                // Remover obrigatoriedade
+                document.getElementById('data-disparo').required = false;
+                
+                // Mostrar bloco específico
+                if (recorrencia === 'diario') {
+                    opcoesDiario.classList.add('show');
+                } else if (recorrencia === 'semanal') {
+                    opcoesSemanal.classList.add('show');
+                } else if (recorrencia === 'mensal') {
+                    opcoesMensal.classList.add('show');
+                }
             }
+        }
+
+        function toggleTimePickerRecorrencia(tipo) {
+            currentRecorrenciaTimePicker = tipo;
+            const dropdown = document.getElementById('time-picker-dropdown');
+            const overlay = document.getElementById('time-picker-overlay');
+            dropdown.classList.toggle('open');
+            overlay.classList.toggle('open');
         }
 
         function toggleDiaSemana(element) {
@@ -1496,6 +1631,8 @@
 
         function clearRecorrencia() {
             document.getElementById('recorrencia-select').value = 'unico';
+            document.getElementById('data-hora-unico').style.display = 'flex';
+            document.getElementById('opcoes-diario').classList.remove('show');
             document.getElementById('opcoes-semanal').classList.remove('show');
             document.getElementById('opcoes-mensal').classList.remove('show');
             document.querySelectorAll('.dia-semana-btn').forEach(btn => {
@@ -1503,6 +1640,13 @@
             });
             document.getElementById('dias-semana-input').value = '';
             document.getElementById('dia-mes-input').value = '';
+            // Limpar horários de recorrência
+            document.getElementById('time-picker-diario').value = '';
+            document.getElementById('hora-diario').value = '';
+            document.getElementById('time-picker-semanal').value = '';
+            document.getElementById('hora-semanal').value = '';
+            document.getElementById('time-picker-mensal').value = '';
+            document.getElementById('hora-mensal').value = '';
         }
 
         // ========== FUNÇÕES BUSCA EVOLUTION API ==========
@@ -1777,34 +1921,50 @@
         async function submitAgendamento(event) {
             event.preventDefault();
             
-            if (!document.getElementById('hora-disparo').value) {
-                showAlert('alert-agend', '✗ Selecione um horário para o disparo.', 'error');
-                return;
+            const recorrencia = document.getElementById('recorrencia-select').value;
+            let horaDisparo = '';
+            
+            // Validar horário conforme o tipo
+            if (recorrencia === 'unico') {
+                horaDisparo = document.getElementById('hora-disparo').value;
+                if (!horaDisparo) {
+                    showAlert('alert-agend', '✗ Selecione um horário para o disparo.', 'error');
+                    return;
+                }
+            } else if (recorrencia === 'diario') {
+                horaDisparo = document.getElementById('hora-diario').value;
+                if (!horaDisparo) {
+                    showAlert('alert-agend', '✗ Selecione um horário para o disparo diário.', 'error');
+                    return;
+                }
+            } else if (recorrencia === 'semanal') {
+                const diasSelecionados = document.querySelectorAll('.dia-semana-btn.selected');
+                if (diasSelecionados.length === 0) {
+                    showAlert('alert-agend', '✗ Selecione pelo menos um dia da semana.', 'error');
+                    return;
+                }
+                horaDisparo = document.getElementById('hora-semanal').value;
+                if (!horaDisparo) {
+                    showAlert('alert-agend', '✗ Selecione um horário para o disparo semanal.', 'error');
+                    return;
+                }
+            } else if (recorrencia === 'mensal') {
+                const diaMes = document.getElementById('dia-mes-input').value;
+                if (!diaMes || diaMes < 1 || diaMes > 31) {
+                    showAlert('alert-agend', '✗ Informe um dia do mês válido (1-31).', 'error');
+                    return;
+                }
+                horaDisparo = document.getElementById('hora-mensal').value;
+                if (!horaDisparo) {
+                    showAlert('alert-agend', '✗ Selecione um horário para o disparo mensal.', 'error');
+                    return;
+                }
             }
 
             const destinatarios = getDestinatariosSelecionados();
             if (destinatarios.length === 0) {
                 showAlert('alert-agend', '✗ Selecione pelo menos um destinatário.', 'error');
                 return;
-            }
-
-            const recorrencia = document.getElementById('recorrencia-select').value;
-            
-            // Validações de recorrência
-            if (recorrencia === 'semanal') {
-                const diasSelecionados = document.querySelectorAll('.dia-semana-btn.selected');
-                if (diasSelecionados.length === 0) {
-                    showAlert('alert-agend', '✗ Selecione pelo menos um dia da semana.', 'error');
-                    return;
-                }
-            }
-            
-            if (recorrencia === 'mensal') {
-                const diaMes = document.getElementById('dia-mes-input').value;
-                if (!diaMes || diaMes < 1 || diaMes > 31) {
-                    showAlert('alert-agend', '✗ Informe um dia do mês válido (1-31).', 'error');
-                    return;
-                }
             }
             
             setLoading('btn-agend', true);
@@ -1816,9 +1976,63 @@
             // Adicionar prefixo 55
             data['Telefone Responsavel'] = '55' + data['Telefone Responsavel'].replace(/\D/g, '');
             
-            if (data['Data do Disparo']) {
-                const [year, month, day] = data['Data do Disparo'].split('-');
+            // Processar Data e Hora conforme o tipo de recorrência
+            if (recorrencia === 'unico') {
+                // Disparo único: usa data e hora informadas
+                if (data['Data do Disparo']) {
+                    const [year, month, day] = data['Data do Disparo'].split('-');
+                    data['Data do Disparo'] = `${day}/${month}/${year}`;
+                }
+                data['Hora do Disparo'] = horaDisparo;
+            } else {
+                // Recorrência: calcular próxima data
+                const hoje = new Date();
+                const [hora, minuto] = horaDisparo.split(':').map(Number);
+                let proximaData = new Date();
+                
+                if (recorrencia === 'diario') {
+                    // Se já passou o horário hoje, começa amanhã
+                    if (hoje.getHours() > hora || (hoje.getHours() === hora && hoje.getMinutes() >= minuto)) {
+                        proximaData.setDate(proximaData.getDate() + 1);
+                    }
+                } else if (recorrencia === 'semanal') {
+                    const diasSelecionados = JSON.parse(document.getElementById('dias-semana-input').value);
+                    const diaAtual = hoje.getDay();
+                    
+                    // Encontrar o próximo dia da semana selecionado
+                    let diasAteProximo = 7;
+                    for (const dia of diasSelecionados) {
+                        let diff = dia - diaAtual;
+                        if (diff < 0) diff += 7;
+                        if (diff === 0) {
+                            // É hoje, verificar se já passou o horário
+                            if (hoje.getHours() > hora || (hoje.getHours() === hora && hoje.getMinutes() >= minuto)) {
+                                diff = 7; // Pegar semana que vem
+                            }
+                        }
+                        if (diff < diasAteProximo) {
+                            diasAteProximo = diff;
+                        }
+                    }
+                    proximaData.setDate(proximaData.getDate() + diasAteProximo);
+                } else if (recorrencia === 'mensal') {
+                    const diaDoMes = parseInt(document.getElementById('dia-mes-input').value);
+                    proximaData.setDate(diaDoMes);
+                    
+                    // Se o dia já passou este mês, ir para o próximo
+                    if (proximaData < hoje || (proximaData.toDateString() === hoje.toDateString() && 
+                        (hoje.getHours() > hora || (hoje.getHours() === hora && hoje.getMinutes() >= minuto)))) {
+                        proximaData.setMonth(proximaData.getMonth() + 1);
+                        proximaData.setDate(diaDoMes);
+                    }
+                }
+                
+                // Formatar data
+                const day = String(proximaData.getDate()).padStart(2, '0');
+                const month = String(proximaData.getMonth() + 1).padStart(2, '0');
+                const year = proximaData.getFullYear();
                 data['Data do Disparo'] = `${day}/${month}/${year}`;
+                data['Hora do Disparo'] = horaDisparo;
             }
 
             // Processar campos de recorrência
@@ -1961,7 +2175,9 @@
 
                 // Determinar botões de ação baseado no status
                 let acoesHtml = '';
-                if (item.status === 'pendente') {
+                const status = (item.status || '').toLowerCase().trim();
+                
+                if (status === 'pendente') {
                     acoesHtml = `
                         <button class="btn-acao btn-pausar" onclick="executarAcao(${item.id}, 'pausar', this)">
                             ⏸️ Pausar
@@ -1970,7 +2186,7 @@
                             🗑️ Excluir
                         </button>
                     `;
-                } else if (item.status === 'pausado') {
+                } else if (status === 'pausado') {
                     acoesHtml = `
                         <button class="btn-acao btn-reativar" onclick="executarAcao(${item.id}, 'reativar', this)">
                             ▶️ Reativar
@@ -1979,7 +2195,27 @@
                             🗑️ Excluir
                         </button>
                     `;
-                } else if (item.status === 'enviado' || item.status === 'erro') {
+                } else if (status === 'erro') {
+                    acoesHtml = `
+                        <button class="btn-acao btn-reativar" onclick="executarAcao(${item.id}, 'reativar', this)">
+                            🔄 Retentar
+                        </button>
+                        <button class="btn-acao btn-excluir" onclick="abrirModalExclusao(${item.id})">
+                            🗑️ Excluir
+                        </button>
+                    `;
+                } else if (status === 'enviado') {
+                    acoesHtml = `
+                        <button class="btn-acao btn-excluir" onclick="abrirModalExclusao(${item.id})">
+                            🗑️ Excluir
+                        </button>
+                    `;
+                } else if (status === 'processando') {
+                    acoesHtml = `
+                        <span style="color: #64748b; font-size: 0.8rem;">⏳ Aguarde...</span>
+                    `;
+                } else {
+                    // Para qualquer outro status, mostrar pelo menos o botão excluir
                     acoesHtml = `
                         <button class="btn-acao btn-excluir" onclick="abrirModalExclusao(${item.id})">
                             🗑️ Excluir
@@ -2048,19 +2284,35 @@
         }
 
         function abrirModalExclusao(agendamentoId) {
+            console.log('Abrindo modal para excluir agendamento:', agendamentoId);
             agendamentoParaExcluir = agendamentoId;
-            document.getElementById('modal-confirmar-exclusao').classList.add('active');
+            const modal = document.getElementById('modal-confirmar-exclusao');
+            if (modal) {
+                modal.classList.add('active');
+                console.log('Modal ativado');
+            } else {
+                console.error('Modal não encontrado!');
+            }
         }
 
         function fecharModal() {
-            document.getElementById('modal-confirmar-exclusao').classList.remove('active');
+            const modal = document.getElementById('modal-confirmar-exclusao');
+            if (modal) {
+                modal.classList.remove('active');
+            }
             agendamentoParaExcluir = null;
         }
 
         async function confirmarExclusao() {
-            if (!agendamentoParaExcluir) return;
+            if (!agendamentoParaExcluir) {
+                console.error('Nenhum agendamento selecionado para exclusão');
+                return;
+            }
             
             const telefone = '55' + document.getElementById('gerenciar-telefone').value.replace(/\D/g, '');
+            const idParaExcluir = agendamentoParaExcluir;
+            
+            console.log('Excluindo agendamento:', idParaExcluir, 'telefone:', telefone);
             
             fecharModal();
             
@@ -2072,35 +2324,35 @@
                     },
                     body: JSON.stringify({
                         telefone: telefone,
-                        agendamento_id: agendamentoParaExcluir,
+                        agendamento_id: idParaExcluir,
                         acao: 'excluir'
                     })
                 });
 
+                console.log('Response status:', response.status);
                 const result = await response.json();
+                console.log('Response body:', result);
 
-                if (result.sucesso) {
+                if (result.sucesso || response.ok) {
                     showAlert('alert-gerenciar', '✓ Agendamento excluído com sucesso!', 'success');
                     // Remover card com animação
-                    const card = document.getElementById(`card-${agendamentoParaExcluir}`);
+                    const card = document.getElementById(`card-${idParaExcluir}`);
                     if (card) {
                         card.style.opacity = '0';
                         card.style.transform = 'translateX(-20px)';
                         setTimeout(() => {
-                            // Recarregar lista
                             loadGerenciar();
                         }, 300);
                     } else {
                         await loadGerenciar();
                     }
                 } else {
-                    throw new Error(result.mensagem || 'Erro ao excluir');
+                    throw new Error(result.mensagem || result.error || 'Erro ao excluir');
                 }
             } catch (error) {
+                console.error('Erro ao excluir:', error);
                 showAlert('alert-gerenciar', `✗ Erro: ${error.message}`, 'error');
             }
-            
-            agendamentoParaExcluir = null;
         }
         // ========== FIM FUNÇÕES GERENCIAR AGENDADOS ==========
 
