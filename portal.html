@@ -1295,6 +1295,14 @@
                                 <button type="button" class="filtro-btn" onclick="setFiltro('contato', this)">CONTATOS</button>
                             </div>
                         </div>
+                        <!-- Botões de seleção em massa -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0; flex-wrap: wrap; gap: 10px;">
+                            <span id="contador-selecionados" style="color: #22c55e; font-weight: 600; font-size: 0.9rem;">0 selecionados</span>
+                            <div style="display: flex; gap: 8px;">
+                                <button type="button" class="expand-btn" onclick="selecionarTodosDestinatarios()">✓ Selecionar Todos</button>
+                                <button type="button" class="expand-btn" onclick="desmarcarTodosDestinatarios()">✗ Desmarcar Todos</button>
+                            </div>
+                        </div>
                         <div id="destinatarios-list" class="destinatarios-list">
                             <p style="color: #64748b; font-size: 0.85rem;">Clique em "BUSCAR DESTINATÁRIOS" para carregar.</p>
                         </div>
@@ -1983,11 +1991,12 @@
             const list = document.getElementById('destinatarios-list');
             if (destinatarios.length === 0) {
                 list.innerHTML = '<p style="color: #64748b;">Nenhum destinatário encontrado com esse filtro.</p>';
+                atualizarContadorSelecionados();
                 return;
             }
             list.innerHTML = destinatarios.map(dest => `
                 <div class="destinatario-item" data-tipo="${dest.tipo || 'contato'}" data-nome="${dest.nome.toLowerCase()}">
-                    <input type="checkbox" name="destinatarios[]" value="${dest.id}" onclick="event.stopPropagation(); this.parentElement.classList.toggle('selected');">
+                    <input type="checkbox" name="destinatarios[]" value="${dest.id}" onchange="atualizarContadorSelecionados()" onclick="event.stopPropagation(); this.parentElement.classList.toggle('selected');">
                     <div class="destinatario-info" onclick="toggleDestinatario(this.parentElement)">
                         <div class="destinatario-nome">${dest.nome}</div>
                         <div class="destinatario-numero">${dest.numero}</div>
@@ -1996,6 +2005,7 @@
                     <button type="button" class="btn-remover-dest" onclick="event.stopPropagation(); removerDestinatario(${dest.id}, '${dest.nome.replace(/'/g, "\\'")}')">🗑️</button>
                 </div>
             `).join('');
+            atualizarContadorSelecionados();
         }
 
         async function removerDestinatario(destId, destNome) {
@@ -2051,10 +2061,50 @@
             });
             
             renderizarDestinatarios(filtrados);
+            atualizarContadorSelecionados();
+        }
+
+        function selecionarTodosDestinatarios() {
+            const items = document.querySelectorAll('#destinatarios-list .destinatario-item');
+            items.forEach(item => {
+                const checkbox = item.querySelector('input[name="destinatarios[]"]');
+                if (checkbox) {
+                    checkbox.checked = true;
+                    item.classList.add('selected');
+                }
+            });
+            atualizarContadorSelecionados();
+        }
+
+        function desmarcarTodosDestinatarios() {
+            const items = document.querySelectorAll('#destinatarios-list .destinatario-item');
+            items.forEach(item => {
+                const checkbox = item.querySelector('input[name="destinatarios[]"]');
+                if (checkbox) {
+                    checkbox.checked = false;
+                    item.classList.remove('selected');
+                }
+            });
+            atualizarContadorSelecionados();
+        }
+
+        function atualizarContadorSelecionados() {
+            const total = document.querySelectorAll('#destinatarios-list input[name="destinatarios[]"]').length;
+            const selecionados = document.querySelectorAll('#destinatarios-list input[name="destinatarios[]"]:checked').length;
+            const contador = document.getElementById('contador-selecionados');
+            if (contador) {
+                contador.textContent = `${selecionados} de ${total} selecionados`;
+                contador.style.color = selecionados > 0 ? '#22c55e' : '#64748b';
+            }
         }
 
         function toggleDestinatario(element) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            if (checkbox) {
+                checkbox.checked = !checkbox.checked;
+            }
             element.classList.toggle('selected');
+            atualizarContadorSelecionados();
         }
 
         function getDestinatariosSelecionados() {
