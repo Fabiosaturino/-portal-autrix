@@ -1222,15 +1222,6 @@
             <div id="destinatarios" class="tab-content active">
                 <h2 class="form-title">Cadastrar Destinatários</h2>
                 <div id="alert-dest" class="alert"></div>
-                
-                <!-- Campo do telefone responsável -->
-                <div class="form-group">
-                    <label>Seu Telefone (responsável) <span class="required">*</span></label>
-                    <div class="phone-input-group">
-                        <span class="phone-prefix">+55</span>
-                        <input type="text" id="tel-resp-dest" class="form-control" placeholder="11999999999" required>
-                    </div>
-                </div>
 
                 <!-- Botão para buscar contatos -->
                 <button type="button" id="btn-buscar-evolution" class="btn-submit" onclick="buscarContatosEvolution()" style="margin-bottom: 20px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); box-shadow: 0 5px 25px rgba(16, 185, 129, 0.4);">
@@ -1292,11 +1283,6 @@
                 <div id="alert-agend" class="alert"></div>
                 <form id="form-agendamento" onsubmit="submitAgendamento(event)">
                     <div class="form-group">
-                        <label>Seu Telefone <span class="required">*</span></label>
-                        <div class="phone-input-group">
-                            <span class="phone-prefix">+55</span>
-                            <input type="text" name="Telefone Responsavel" id="tel-resp-agend" class="form-control" placeholder="11999999999" required>
-                        </div>
                         <button type="button" class="btn-buscar-dest" onclick="carregarDestinatarios()">BUSCAR DESTINATÁRIOS</button>
                     </div>
                     <div class="form-group" id="destinatarios-container" style="display: none;">
@@ -1321,6 +1307,10 @@
                     <div class="form-group">
                         <label>URL da Imagem (opcional)</label>
                         <input type="url" name="URL da Imagem" class="form-control" placeholder="https://exemplo.com/imagem.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label>URL do Vídeo (opcional)</label>
+                        <input type="url" name="URL do Video" class="form-control" placeholder="https://exemplo.com/video.mp4">
                     </div>
                     <!-- Data e Horário (apenas para disparo único) -->
                     <div id="data-hora-unico" class="form-row">
@@ -1447,11 +1437,7 @@
                 <div id="alert-gerenciar" class="alert"></div>
                 
                 <div class="dashboard-search">
-                    <div class="phone-input-group">
-                        <span class="phone-prefix">+55</span>
-                        <input type="text" id="gerenciar-telefone" class="form-control" placeholder="11999999999">
-                    </div>
-                    <button onclick="loadGerenciar()" class="btn-submit">BUSCAR</button>
+                    <button onclick="loadGerenciar()" class="btn-submit" style="width: 100%;">CARREGAR AGENDAMENTOS</button>
                 </div>
 
                 <!-- Filtros de Status -->
@@ -1470,17 +1456,17 @@
             <div id="dashboard" class="tab-content">
                 <h2 class="form-title">Dashboard</h2>
                 <div class="dashboard-search">
-                    <div class="phone-input-group">
-                        <span class="phone-prefix">+55</span>
-                        <input type="text" id="dashboard-telefone" class="form-control" placeholder="11999999999">
-                    </div>
-                    <button onclick="loadDashboard()" class="btn-submit">BUSCAR</button>
+                    <button onclick="loadDashboard()" class="btn-submit" style="width: 100%;">CARREGAR DASHBOARD</button>
                 </div>
                 <div id="dashboard-content"></div>
             </div>
         </div>
 
         <div class="footer">
+            <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+                <button onclick="abrirModalSenha()" style="background: rgba(59, 130, 246, 0.2); border: 1px solid rgba(59, 130, 246, 0.3); color: #3b82f6; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">🔐 Alterar Senha</button>
+                <button onclick="logout()" style="background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.3); color: #ef4444; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">🚪 Sair</button>
+            </div>
             <p>Powered by <a href="#">AUTRIX</a></p>
         </div>
     </div>
@@ -1497,8 +1483,65 @@
         </div>
     </div>
 
+    <!-- Modal de Alteração de Senha -->
+    <div id="modal-alterar-senha" class="modal-overlay">
+        <div class="modal-content">
+            <h3 class="modal-title">🔐 Alterar Senha</h3>
+            <div id="alert-senha" class="alert" style="margin-bottom: 15px;"></div>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 5px; display: block;">Senha Atual</label>
+                <input type="password" id="senha-atual" class="form-control" placeholder="Digite sua senha atual">
+            </div>
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 5px; display: block;">Nova Senha</label>
+                <input type="password" id="senha-nova" class="form-control" placeholder="Digite a nova senha">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label style="color: #94a3b8; font-size: 0.9rem; margin-bottom: 5px; display: block;">Confirmar Nova Senha</label>
+                <input type="password" id="senha-confirmar" class="form-control" placeholder="Confirme a nova senha">
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-btn modal-btn-cancel" onclick="fecharModalSenha()">Cancelar</button>
+                <button class="modal-btn modal-btn-confirm" id="btn-alterar-senha" onclick="alterarSenha()">Alterar</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let statsChart = null;
+
+        // Verificar se está logado
+        document.addEventListener('DOMContentLoaded', function() {
+            const telefone = localStorage.getItem('autrix_telefone');
+            const nome = localStorage.getItem('autrix_nome');
+            if (!telefone || !nome) {
+                window.location.href = 'index.html';
+                return;
+            }
+            
+            // Exibir nome do usuário (opcional)
+            const headerP = document.querySelector('.header p');
+            if (headerP) {
+                headerP.innerHTML = `PORTAL DE AGENDAMENTO<br><span style="font-size: 0.8rem; color: #3b82f6;">Olá, ${nome}</span>`;
+            }
+        });
+
+        // Funções para obter telefone salvo
+        function getTelefoneSalvo() {
+            const tel = localStorage.getItem('autrix_telefone');
+            if (!tel) {
+                alert('⚠️ Sessão expirada. Faça login novamente.');
+                window.location.href = 'index.html';
+                return null;
+            }
+            return tel;
+        }
+
+        function logout() {
+            localStorage.removeItem('autrix_telefone');
+            localStorage.removeItem('autrix_nome');
+            window.location.href = 'index.html';
+        }
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-content').forEach(tab => {
@@ -1719,11 +1762,8 @@
         let selecionadosEvo = new Set();
 
         async function buscarContatosEvolution() {
-            const telResp = document.getElementById('tel-resp-dest').value.replace(/\D/g, '');
-            if (!telResp || telResp.length < 10) {
-                showAlert('alert-dest', '✗ Digite seu telefone antes de buscar.', 'error');
-                return;
-            }
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
 
             const btn = document.getElementById('btn-buscar-evolution');
             btn.disabled = true;
@@ -1823,7 +1863,9 @@
                 return;
             }
 
-            const telResp = '55' + document.getElementById('tel-resp-dest').value.replace(/\D/g, '');
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
+            
             const btn = document.getElementById('btn-cadastrar-evo');
             btn.disabled = true;
             btn.innerHTML = '<span class="loading"></span> CADASTRANDO...';
@@ -1839,7 +1881,7 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
-                            'Telefone Responsavel': telResp,
+                            'Telefone Responsavel': telefone,
                             'Nome': contato.nome,
                             'Telefone': contato.numero
                         })
@@ -1865,8 +1907,8 @@
         async function submitDestinatario(event) {
             event.preventDefault();
             
-            // Pegar telefone do campo principal
-            document.getElementById('tel-resp-manual').value = document.getElementById('tel-resp-dest').value;
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
             
             setLoading('btn-dest', true);
             
@@ -1874,8 +1916,8 @@
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
-            // Adicionar prefixo 55 no telefone responsável
-            data['Telefone Responsavel'] = '55' + data['Telefone Responsavel'].replace(/\D/g, '');
+            // Usar telefone salvo
+            data['Telefone Responsavel'] = telefone;
             // Telefone/ID do destinatário: manter como digitado (pode ser ID de grupo)
             data['Telefone'] = data['Telefone'].trim();
 
@@ -1906,8 +1948,8 @@
         let filtroAtual = 'todos';
 
         async function carregarDestinatarios() {
-            const telefone = '55' + document.getElementById('tel-resp-agend').value;
-            if (telefone.length < 13) return;
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
             
             const container = document.getElementById('destinatarios-container');
             const list = document.getElementById('destinatarios-list');
@@ -1961,7 +2003,8 @@
                 return;
             }
             
-            const telefone = '55' + document.getElementById('tel-resp-agend').value.replace(/\D/g, '');
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
             
             try {
                 const response = await fetch('https://workflow.autrix.com.br/webhook/remover-destinatario', {
@@ -2070,12 +2113,18 @@
             
             setLoading('btn-agend', true);
             
+            const telefone = getTelefoneSalvo();
+            if (!telefone) {
+                setLoading('btn-agend', false);
+                return;
+            }
+            
             const form = document.getElementById('form-agendamento');
             const formData = new FormData(form);
             const data = Object.fromEntries(formData.entries());
             
-            // Adicionar prefixo 55
-            data['Telefone Responsavel'] = '55' + data['Telefone Responsavel'].replace(/\D/g, '');
+            // Usar telefone salvo
+            data['Telefone Responsavel'] = telefone;
             
             // Processar Data e Hora conforme o tipo de recorrência
             if (recorrencia === 'unico') {
@@ -2189,11 +2238,8 @@
         let agendamentoParaExcluir = null;
 
         async function loadGerenciar() {
-            const telefone = '55' + document.getElementById('gerenciar-telefone').value.replace(/\D/g, '');
-            if (telefone.length < 4) {
-                showAlert('alert-gerenciar', '✗ Digite seu telefone', 'error');
-                return;
-            }
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
             
             const content = document.getElementById('gerenciar-content');
             content.innerHTML = '<div style="text-align: center; padding: 40px; color: #64748b;"><span class="loading"></span> Carregando...</div>';
@@ -2354,7 +2400,8 @@
         }
 
         async function executarAcao(agendamentoId, acao, btn) {
-            const telefone = '55' + document.getElementById('gerenciar-telefone').value.replace(/\D/g, '');
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
             
             btn.disabled = true;
             const textoOriginal = btn.innerHTML;
@@ -2415,7 +2462,9 @@
                 return;
             }
             
-            const telefone = '55' + document.getElementById('gerenciar-telefone').value.replace(/\D/g, '');
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
+            
             const idParaExcluir = agendamentoParaExcluir;
             
             console.log('Excluindo agendamento:', idParaExcluir, 'telefone:', telefone);
@@ -2463,11 +2512,8 @@
         // ========== FIM FUNÇÕES GERENCIAR AGENDADOS ==========
 
         async function loadDashboard() {
-            const telefone = '55' + document.getElementById('dashboard-telefone').value.replace(/\D/g, '');
-            if (telefone.length < 4) {
-                alert('Digite seu telefone');
-                return;
-            }
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
             
             const content = document.getElementById('dashboard-content');
             content.innerHTML = '<div style="text-align: center; padding: 40px; color: #64748b;"><span class="loading"></span> Carregando...</div>';
@@ -2693,6 +2739,93 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
+        }
+
+        // Funções para modal de alteração de senha
+        function abrirModalSenha() {
+            document.getElementById('modal-alterar-senha').classList.add('active');
+            document.getElementById('senha-atual').value = '';
+            document.getElementById('senha-nova').value = '';
+            document.getElementById('senha-confirmar').value = '';
+            document.getElementById('alert-senha').style.display = 'none';
+        }
+
+        function fecharModalSenha() {
+            document.getElementById('modal-alterar-senha').classList.remove('active');
+        }
+
+        async function alterarSenha() {
+            const senhaAtual = document.getElementById('senha-atual').value;
+            const senhaNova = document.getElementById('senha-nova').value;
+            const senhaConfirmar = document.getElementById('senha-confirmar').value;
+            const alertDiv = document.getElementById('alert-senha');
+            const btn = document.getElementById('btn-alterar-senha');
+
+            // Validações
+            if (!senhaAtual || !senhaNova || !senhaConfirmar) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'Preencha todos os campos!';
+                alertDiv.style.display = 'block';
+                return;
+            }
+
+            if (senhaNova !== senhaConfirmar) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'As senhas não conferem!';
+                alertDiv.style.display = 'block';
+                return;
+            }
+
+            if (senhaNova.length < 4) {
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'A nova senha deve ter pelo menos 4 caracteres!';
+                alertDiv.style.display = 'block';
+                return;
+            }
+
+            const telefone = getTelefoneSalvo();
+            if (!telefone) return;
+
+            btn.disabled = true;
+            btn.textContent = 'Alterando...';
+
+            try {
+                const response = await fetch('https://workflow.autrix.com.br/webhook/alterar-senha', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        telefone: telefone,
+                        senha_atual: senhaAtual,
+                        nova_senha: senhaNova
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.sucesso) {
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.textContent = 'Senha alterada com sucesso!';
+                    alertDiv.style.display = 'block';
+                    
+                    setTimeout(() => {
+                        fecharModalSenha();
+                    }, 1500);
+                } else {
+                    alertDiv.className = 'alert alert-error';
+                    alertDiv.textContent = data.mensagem || 'Erro ao alterar senha!';
+                    alertDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                alertDiv.className = 'alert alert-error';
+                alertDiv.textContent = 'Erro ao conectar com o servidor!';
+                alertDiv.style.display = 'block';
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Alterar';
         }
 
         // Inicializar
